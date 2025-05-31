@@ -1,10 +1,20 @@
 Attribute VB_Name = "m転記_集計表_モールFR別"
 Option Explicit
 
+' ==========================================================
+' 高速化設定
+' ==========================================================
 ' モールFR別から集計表への転記マクロ
 ' 「_モールFR別b」テーブルから「集計表」シートへデータを転記
 Sub 転記_集計表_モールFR別()
+    ' 高速化設定
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
+    
+    ' ==========================================================
     ' 変数宣言
+    ' ==========================================================
     Dim wsTarget As Worksheet
     Dim wsSource As Worksheet
     Dim targetDate As Date
@@ -34,11 +44,9 @@ Sub 転記_集計表_モールFR別()
     ' エラーハンドリング設定
     On Error GoTo ErrorHandler
     
-    ' 高速化設定
-    Application.ScreenUpdating = False
-    Application.Calculation = xlCalculationManual
-    Application.EnableEvents = False
-    
+    ' ==========================================================
+    ' メイン処理
+    ' ==========================================================
     ' 進捗表示開始
     Application.StatusBar = "モールFR別データの転記処理を開始します..."
     
@@ -47,14 +55,14 @@ Sub 転記_集計表_モールFR別()
     Set wsTarget = ThisWorkbook.Worksheets("集計表")
     If wsTarget Is Nothing Then
         MsgBox "「集計表」シートが見つかりません。", vbCritical
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     On Error GoTo ErrorHandler
     
     ' 集計表のA1セルから日付取得
     If Not IsDate(wsTarget.Range("A1").Value) Then
         MsgBox "集計表のセルA1に有効な日付が入力されていません。", vbCritical
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     targetDate = wsTarget.Range("A1").Value
     
@@ -63,7 +71,7 @@ Sub 転記_集計表_モールFR別()
     Set wsSource = ThisWorkbook.Worksheets("モールFR別")
     If wsSource Is Nothing Then
         MsgBox "「モールFR別」シートが見つかりません。", vbCritical
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     On Error GoTo ErrorHandler
     
@@ -72,14 +80,14 @@ Sub 転記_集計表_モールFR別()
     Set sourceTable = wsSource.ListObjects("_モールFR別b")
     If sourceTable Is Nothing Then
         MsgBox "「_モールFR別b」テーブルが見つかりません。", vbCritical
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     On Error GoTo ErrorHandler
     
     ' データ範囲取得
     If sourceTable.DataBodyRange Is Nothing Then
         MsgBox "「_モールFR別b」テーブルにデータがありません。", vbInformation
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     Set sourceData = sourceTable.DataBodyRange
     
@@ -90,7 +98,7 @@ Sub 転記_集計表_モールFR別()
     If Err.Number <> 0 Then
         MsgBox "「_モールFR別b」テーブルに「日付」列が見つかりません。", vbCritical
         Err.Clear
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     On Error GoTo ErrorHandler
     
@@ -105,7 +113,7 @@ Sub 転記_集計表_モールFR別()
     
     If sourceRow = 0 Then
         MsgBox "日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。", vbInformation
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     
     ' 各カテゴリ（モールF、モールR、合計）について処理
@@ -158,14 +166,27 @@ Sub 転記_集計表_モールFR別()
     
     ' 正常終了
     Application.StatusBar = False
-    Exit Sub
+    GoTo Cleanup
     
+' ==========================================================
+' エラーハンドリング
+' ==========================================================
 ErrorHandler:
     MsgBox "転記処理中に予期しないエラーが発生しました。" & vbCrLf & _
            "エラー内容: " & Err.Description & vbCrLf & _
            "エラー番号: " & Err.Number, vbCritical, "転記エラー"
     
-CleanupAndExit:
+' ==========================================================
+' 後処理
+' ==========================================================
+Cleanup:
+    ' オブジェクトの解放
+    Set sourceData = Nothing
+    Set sourceTable = Nothing
+    Set wsSource = Nothing
+    Set wsTarget = Nothing
+    
+    ' 設定を元に戻す
     Application.EnableEvents = True
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True

@@ -1,5 +1,20 @@
 Attribute VB_Name = "m転記_集計表_流出廃棄"
+Option Explicit
+
+' ==========================================================
+' 高速化設定
+' ==========================================================
+' 流出廃棄から集計表への転記マクロ
+' 「_流出廃棄b」テーブルから「集計表」シートへデータを転記
 Sub 転記_集計表_流出廃棄()
+    ' 高速化設定
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
+    
+    ' ==========================================================
+    ' 変数宣言
+    ' ==========================================================
     Dim ws流出廃棄 As Worksheet
     Dim ws集計表 As Worksheet
     Dim tbl流出廃棄 As ListObject
@@ -10,11 +25,9 @@ Sub 転記_集計表_流出廃棄()
     ' エラーハンドリング設定
     On Error GoTo ErrorHandler
     
-    ' 高速化設定
-    Application.ScreenUpdating = False
-    Application.Calculation = xlCalculationManual
-    Application.EnableEvents = False
-    
+    ' ==========================================================
+    ' メイン処理
+    ' ==========================================================
     ' ステータスバーに進捗表示
     Application.StatusBar = "流出廃棄データを転記中..."
     
@@ -28,7 +41,7 @@ Sub 転記_集計表_流出廃棄()
     ' 集計表のA1セルから日付を取得
     If Not IsDate(ws集計表.Range("A1").Value) Then
         MsgBox "集計表のA1セルに有効な日付が入力されていません。", vbExclamation
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     targetDate = ws集計表.Range("A1").Value
     
@@ -44,7 +57,7 @@ Sub 転記_集計表_流出廃棄()
     ' 日付が見つからなかった場合
     If foundRow = 0 Then
         MsgBox "指定された日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。", vbExclamation
-        GoTo CleanupAndExit
+        GoTo Cleanup
     End If
     
     ' データの転記処理
@@ -89,16 +102,27 @@ Sub 転記_集計表_流出廃棄()
     ws集計表.Range("P57").Value = 成形廃棄 + 塗装廃棄 + 加工廃棄
     
     ' 正常終了
-    GoTo CleanupAndExit
+    GoTo Cleanup
     
+' ==========================================================
+' エラーハンドリング
+' ==========================================================
 ErrorHandler:
     ' エラー処理
     MsgBox "エラーが発生しました。" & vbCrLf & _
            "エラー番号: " & Err.Number & vbCrLf & _
            "エラー内容: " & Err.Description, vbCritical
            
-CleanupAndExit:
-    ' 後処理
+' ==========================================================
+' 後処理
+' ==========================================================
+Cleanup:
+    ' オブジェクトの解放
+    Set tbl流出廃棄 = Nothing
+    Set ws流出廃棄 = Nothing
+    Set ws集計表 = Nothing
+    
+    ' 設定を元に戻す
     Application.EnableEvents = True
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
