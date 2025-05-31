@@ -1,4 +1,8 @@
 Attribute VB_Name = "m転記_集計表_加工作業者別"
+Option Explicit
+
+' 加工作業者別から集計表への転記マクロ
+' 「_加工作業者別b」テーブルから「集計表」シートへデータを転記
 Sub 転記_集計表_加工作業者別()
     ' 変数宣言
     Dim wsTarget As Worksheet
@@ -96,7 +100,7 @@ Sub 転記_集計表_加工作業者別()
     Next j
     
     If sourceRow = 0 Then
-        MsgBox "日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。", vbCritical, "データエラー"
+        MsgBox "日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。", vbInformation
         GoTo CleanupAndExit
     End If
     
@@ -161,18 +165,18 @@ Sub 転記_集計表_加工作業者別()
         End If
     Next i
     
-    ' 正常終了（エラー時以外はメッセージ非表示）
-    GoTo CleanupAndExit
+    ' 正常終了
+    Application.StatusBar = False
+    Exit Sub
     
 ErrorHandler:
-    MsgBox "転記処理中にエラーが発生しました。" & vbCrLf & _
+    MsgBox "転記処理中に予期しないエラーが発生しました。" & vbCrLf & _
            "エラー内容: " & Err.Description & vbCrLf & _
            "エラー番号: " & Err.Number, vbCritical, "転記エラー"
     
 CleanupAndExit:
-    ' 後処理
     Application.EnableEvents = True
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
-    Application.StatusBar = False  ' ステータスバーをクリア
+    Application.StatusBar = False
 End Sub

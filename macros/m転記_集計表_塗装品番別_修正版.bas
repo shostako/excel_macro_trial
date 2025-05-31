@@ -1,4 +1,8 @@
 Attribute VB_Name = "m転記_集計表_塗装品番別"
+Option Explicit
+
+' 塗装品番別から集計表への転記マクロ
+' 「_塗装品番別b」テーブルから「集計表」シートへデータを転記
 Sub 転記_集計表_塗装品番別()
     ' 変数宣言
     Dim wsTarget As Worksheet
@@ -44,16 +48,14 @@ Sub 転記_集計表_塗装品番別()
     On Error Resume Next
     Set wsTarget = ThisWorkbook.Worksheets("集計表")
     If wsTarget Is Nothing Then
-        MsgBox "「集計表」シートが見つかりません。" & vbCrLf & _
-               "まさか、シート名間違えてないよな？", vbCritical
+        MsgBox "「集計表」シートが見つかりません。", vbCritical
         GoTo CleanupAndExit
     End If
     On Error GoTo ErrorHandler
     
     ' 集計表のA1セルから日付取得
     If Not IsDate(wsTarget.Range("A1").Value) Then
-        MsgBox "集計表のセルA1に有効な日付が入力されていません。" & vbCrLf & _
-               "日付も入力できないのか？", vbCritical
+        MsgBox "集計表のセルA1に有効な日付が入力されていません。", vbCritical
         GoTo CleanupAndExit
     End If
     targetDate = wsTarget.Range("A1").Value
@@ -62,8 +64,7 @@ Sub 転記_集計表_塗装品番別()
     On Error Resume Next
     Set wsSource = ThisWorkbook.Worksheets("塗装品番別")
     If wsSource Is Nothing Then
-        MsgBox "「塗装品番別」シートが見つかりません。" & vbCrLf & _
-               "シート作るの忘れた？", vbCritical
+        MsgBox "「塗装品番別」シートが見つかりません。", vbCritical
         GoTo CleanupAndExit
     End If
     On Error GoTo ErrorHandler
@@ -72,16 +73,14 @@ Sub 転記_集計表_塗装品番別()
     On Error Resume Next
     Set sourceTable = wsSource.ListObjects("_塗装品番別b")
     If sourceTable Is Nothing Then
-        MsgBox "「塗装品番別」シートに「_塗装品番別b」テーブルが見つかりません。" & vbCrLf & _
-               "テーブル名、ちゃんと確認した？", vbCritical
+        MsgBox "「塗装品番別」シートに「_塗装品番別b」テーブルが見つかりません。", vbCritical
         GoTo CleanupAndExit
     End If
     On Error GoTo ErrorHandler
     
     ' データ範囲取得
     If sourceTable.DataBodyRange Is Nothing Then
-        MsgBox "「_塗装品番別b」テーブルにデータがありません。" & vbCrLf & _
-               "空のテーブルから何を転記するつもりだ？", vbCritical
+        MsgBox "「_塗装品番別b」テーブルにデータがありません。", vbInformation
         GoTo CleanupAndExit
     End If
     Set sourceData = sourceTable.DataBodyRange
@@ -91,8 +90,8 @@ Sub 転記_集計表_塗装品番別()
     On Error Resume Next
     dateColIndex = sourceTable.ListColumns("日付").Index
     If Err.Number <> 0 Then
-        MsgBox "「_塗装品番別b」テーブルに「日付」列が見つかりません。" & vbCrLf & _
-               "日付列もないのに日付で検索とか無理だろ", vbCritical
+        MsgBox "「_塗装品番別b」テーブルに「日付」列が見つかりません。", vbCritical
+        Err.Clear
         GoTo CleanupAndExit
     End If
     On Error GoTo ErrorHandler
@@ -107,8 +106,7 @@ Sub 転記_集計表_塗装品番別()
     Next j
     
     If sourceRow = 0 Then
-        MsgBox "日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。" & vbCrLf & _
-               "その日のデータ、本当に入力した？", vbCritical
+        MsgBox "日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。", vbInformation
         GoTo CleanupAndExit
     End If
     
@@ -159,18 +157,22 @@ Sub 転記_集計表_塗装品番別()
     
     ' 正常終了メッセージ（コメントアウト済み - エラー時以外は非表示）
     ' MsgBox "塗装データの転記が完了しました。", vbInformation
-    GoTo CleanupAndExit
     
-ErrorHandler:
-    MsgBox "転記処理中に予期せぬエラーが発生しました。" & vbCrLf & _
-           "エラー内容: " & Err.Description & vbCrLf & _
-           "エラー番号: " & Err.Number & vbCrLf & vbCrLf & _
-           "ちゃんとデバッグしてから実行しろよな", vbCritical, "転記エラー"
-    
-CleanupAndExit:
-    ' 後処理
+    ' 正常終了時の後処理
     Application.EnableEvents = True
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
-    Application.StatusBar = False  ' ステータスバーをクリア
+    Application.StatusBar = False
+    Exit Sub
+    
+ErrorHandler:
+    MsgBox "転記処理中に予期しないエラーが発生しました。" & vbCrLf & _
+           "エラー内容: " & Err.Description & vbCrLf & _
+           "エラー番号: " & Err.Number, vbCritical, "転記エラー"
+    
+CleanupAndExit:
+    Application.EnableEvents = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+    Application.StatusBar = False
 End Sub

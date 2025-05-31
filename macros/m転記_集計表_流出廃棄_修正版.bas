@@ -1,4 +1,8 @@
 Attribute VB_Name = "m転記_集計表_流出廃棄"
+Option Explicit
+
+' 流出廃棄から集計表への転記マクロ
+' 「_流出廃棄b」テーブルから「集計表」シートへデータを転記
 Sub 転記_集計表_流出廃棄()
     Dim ws流出廃棄 As Worksheet
     Dim ws集計表 As Worksheet
@@ -15,19 +19,45 @@ Sub 転記_集計表_流出廃棄()
     Application.Calculation = xlCalculationManual
     Application.EnableEvents = False
     
-    ' ステータスバーに進捗表示
-    Application.StatusBar = "流出廃棄データを転記中..."
+    ' 進捗表示開始
+    Application.StatusBar = "流出廃棄データの転記処理を開始します..."
     
-    ' シートの設定
-    Set ws流出廃棄 = ThisWorkbook.Sheets("流出廃棄")
-    Set ws集計表 = ThisWorkbook.Sheets("集計表")
+    ' 集計表シート取得
+    On Error Resume Next
+    Set ws集計表 = ThisWorkbook.Worksheets("集計表")
+    If ws集計表 Is Nothing Then
+        MsgBox "「集計表」シートが見つかりません。", vbCritical
+        GoTo CleanupAndExit
+    End If
+    On Error GoTo ErrorHandler
     
-    ' テーブルの取得
+    ' 流出廃棄シート取得
+    On Error Resume Next
+    Set ws流出廃棄 = ThisWorkbook.Worksheets("流出廃棄")
+    If ws流出廃棄 Is Nothing Then
+        MsgBox "「流出廃棄」シートが見つかりません。", vbCritical
+        GoTo CleanupAndExit
+    End If
+    On Error GoTo ErrorHandler
+    
+    ' ソーステーブル取得
+    On Error Resume Next
     Set tbl流出廃棄 = ws流出廃棄.ListObjects("_流出廃棄b")
+    If tbl流出廃棄 Is Nothing Then
+        MsgBox "「流出廃棄」シートに「_流出廃棄b」テーブルが見つかりません。", vbCritical
+        GoTo CleanupAndExit
+    End If
+    On Error GoTo ErrorHandler
+    
+    ' データ範囲取得
+    If tbl流出廃棄.DataBodyRange Is Nothing Then
+        MsgBox "「_流出廃棄b」テーブルにデータがありません。", vbInformation
+        GoTo CleanupAndExit
+    End If
     
     ' 集計表のA1セルから日付を取得
     If Not IsDate(ws集計表.Range("A1").Value) Then
-        MsgBox "集計表のA1セルに有効な日付が入力されていません。", vbExclamation
+        MsgBox "集計表のセルA1に有効な日付が入力されていません。", vbCritical
         GoTo CleanupAndExit
     End If
     targetDate = ws集計表.Range("A1").Value
@@ -43,12 +73,12 @@ Sub 転記_集計表_流出廃棄()
     
     ' 日付が見つからなかった場合
     If foundRow = 0 Then
-        MsgBox "指定された日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。", vbExclamation
+        MsgBox "日付 " & Format(targetDate, "yyyy/mm/dd") & " のデータが見つかりません。", vbInformation
         GoTo CleanupAndExit
     End If
     
     ' データの転記処理
-    Application.StatusBar = "データを転記しています..."
+    Application.StatusBar = "流出廃棄データを転記中..."
     
     ' 各項目を転記（エラー回避のため個別に処理）
     With tbl流出廃棄.DataBodyRange.Rows(foundRow)
@@ -89,16 +119,15 @@ Sub 転記_集計表_流出廃棄()
     ws集計表.Range("P57").Value = 成形廃棄 + 塗装廃棄 + 加工廃棄
     
     ' 正常終了
-    GoTo CleanupAndExit
+    Application.StatusBar = False
+    Exit Sub
     
 ErrorHandler:
-    ' エラー処理
-    MsgBox "エラーが発生しました。" & vbCrLf & _
-           "エラー番号: " & Err.Number & vbCrLf & _
-           "エラー内容: " & Err.Description, vbCritical
-           
+    MsgBox "転記処理中に予期しないエラーが発生しました。" & vbCrLf & _
+           "エラー内容: " & Err.Description & vbCrLf & _
+           "エラー番号: " & Err.Number, vbCritical, "転記エラー"
+    
 CleanupAndExit:
-    ' 後処理
     Application.EnableEvents = True
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
