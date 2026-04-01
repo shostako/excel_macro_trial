@@ -47,7 +47,8 @@ Sub 統合クエリ参照元変更_複数月対応()
     targetSheets = Array("成形", "塗装", "加工", "成形N", "塗装N", "成形ND", _
                          "成形T", "成形H", "成形G", "成形NW", _
                          "塗装T", "塗装H", "塗装G", "塗装NW", _
-                         "加工T", "加工H", "加工G", "加工NW", "グラフ")
+                         "加工T", "加工H", "加工G", "加工NW", _
+                         "成形P", "塗装P", "加工P", "グラフ")
 
     ' ============================================
     ' アクティブシート確認と入力値取得
@@ -69,7 +70,8 @@ Sub 統合クエリ参照元変更_複数月対応()
     If Not isValidSheet Then
         MsgBox "このマクロは以下のシートから実行してください：" & vbCrLf & _
                "・基本：手直し、成形、塗装、加工、成形N、塗装N、成形ND" & vbCrLf & _
-               "・拡張：成形T、成形H、成形G、成形NW、塗装T、塗装H、塗装G、塗装NW、加工T、加工H、加工G、加工NW" & vbCrLf & _
+               "・拡張T/H/G/NW：成形T、成形H、成形G、成形NW、塗装T、塗装H、塗装G、塗装NW、加工T、加工H、加工G、加工NW" & vbCrLf & _
+               "・拡張P：成形P、塗装P、加工P" & vbCrLf & _
                "・その他：グラフ" & vbCrLf & vbCrLf & _
                "現在のシート: " & activeSheetName, vbExclamation
         GoTo CleanExit
